@@ -34,6 +34,10 @@ var UserSchema = new mongoose.Schema({
   ]
 });
 
+//UserSchema.methods is a function for instances (users) UserScema.statics is a function on the model itself (User)
+
+// I believe toJSON is a function that gets called in the background when you res.send(user) from a successful API call
+// we are overriding that method to only return the users id and email, NOT their password, and tokens
 UserSchema.methods.toJSON = function() {
   var user = this;
   var userObject = user.toObject();
@@ -51,6 +55,26 @@ UserSchema.methods.generateAuthToken = function() {
   user.tokens = user.tokens.concat([{ access, token }]);
   return user.save().then(() => {
     return token;
+  });
+};
+
+UserSchema.statics.findByToken = function(token) {
+  var User = this;
+  var decoded;
+
+  // if any errors happen in the try block it automatically goes into the catch block, runs some code there and then continues on with your program
+  try {
+    decoded = jwt.verify(token, 'abc123');
+  } catch (e) {
+    return Promise.reject();
+  }
+
+  // User.findOne returns a promise, so we will retunr that promise so we can do some .then() chaining whenever we call .findByToken
+  // to query a nested document you must wrap the query in quotes
+  return User.findOne({
+    _id: decoded._id,
+    'tokens.token': token,
+    'tokens.access': 'auth'
   });
 };
 
