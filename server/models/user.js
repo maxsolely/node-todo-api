@@ -35,6 +35,10 @@ var UserSchema = new mongoose.Schema({
   ]
 });
 
+// *********************************************************************************************************************
+// ***************************************** INSTANCE FUNCTIONS (user) *************************************************
+// *********************************************************************************************************************
+
 //UserSchema.methods is a function for instances (users) UserScema.statics is a function on the model itself (User)
 
 // I believe toJSON is a function that gets called in the background when you res.send(user) from a successful API call
@@ -58,6 +62,23 @@ UserSchema.methods.generateAuthToken = function() {
     return token;
   });
 };
+
+UserSchema.methods.removeToken = function(token) {
+  var user = this;
+
+  // $pull lets you remove items from an array that match certain criteria
+  return user.update({
+    $pull: {
+      tokens: {
+        token: token
+      }
+    }
+  });
+};
+
+// *********************************************************************************************************************
+// ******************************************** MODEL FUNCTIONS (User) *************************************************
+// *********************************************************************************************************************
 
 UserSchema.statics.findByToken = function(token) {
   var User = this;
